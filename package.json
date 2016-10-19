@@ -1,0 +1,22 @@
+{
+  "name": "gh-label-maker",
+  "version": "1.0.0",
+  "description": "GitHub label maker",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "keywords": [
+    "github",
+    "labels",
+    "issues"
+  ],
+  "author": "99XT",
+  "license": "MIT",
+  "dependencies": {
+    "bluebird": "^3.4.6",
+    "chai": "^3.5.0",
+    "github": "^5.2.2",
+    "mocha": "^3.1.2"
+  }
+}
