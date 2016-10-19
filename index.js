@@ -3,8 +3,8 @@ const  readlineSync = require('readline-sync');
 
 const organization = process.argv[2];
  
-let userName = readlineSync.question('Enter ur Github Username: ');
-let password = readlineSync.question('Enter ur Github Password: ', { hideEchoBack: true });
+let userName = readlineSync.question('Enter your Github Username: ');
+let password = readlineSync.question('Enter your Github Password: ', { hideEchoBack: true });
 
 if(organization === undefined) {
 	return;
