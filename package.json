@@ -4,7 +4,7 @@
   "description": "GitHub label maker",
   "main": "index.js",
   "bin": {
-        "gh-label": "./index.js"
+    "gh-label": "./index.js"
   },
   "scripts": {
     "test": "mocha"
@@ -20,6 +20,10 @@
     "bluebird": "^3.4.6",
     "chai": "^3.5.0",
     "github": "^5.2.2",
-    "mocha": "^3.1.2"
+    "mocha": "^3.1.2",
+    "readline-sync": "^1.4.4"
+  },
+  "devDependencies": {
+    "shelljs": "^0.7.4"
   }
 }

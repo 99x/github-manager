@@ -1,11 +1,12 @@
-#!/usr/bin/env node
-
 const GitHubApi = require("github");
 const Promise = require('bluebird');
-const credentials = require('./config/credentials');
+const readlineSync = require('readline-sync');
 const organization = process.argv[2];
 const labelName = process.argv[3];
 const labelColor = process.argv[4];
+
+const username = readlineSync.question('Enter your Github Username: ');
+const password = readlineSync.question('Enter your Github Password: ', { hideEchoBack: true });
 
 if(!organization || !labelName || !labelColor) {
 	return;
@@ -25,8 +26,9 @@ const github = new GitHubApi({
 });
 
 github.authenticate({
-	type: "token",
-	token: '435eaccab6c784f14916506221095ca2244f5b15'
+	type: "basic",
+    username: username,
+    password: password
 });
 
 Promise.promisifyAll(github.issues);
