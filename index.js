@@ -15,14 +15,6 @@ const github = new GitHubApi({
 });
 
 github.authenticate({
-    type: "oauth",
-    key: '911093047d9a553e69aa',
-    secret: 'bac9ee16be0b6caabec3469d3faba61b1ad00211'
-}, (err, token) => {
-	console.log(err, token);
-});
-
-github.authenticate({
     type: "basic",
     username: credentials.username,
     password: credentials.password
