@@ -1,5 +1,13 @@
+#!/usr/bin/env node
+
 const GitHubApi = require("github");
 const credentials = require('./config/credentials');
+
+const organization = process.argv[2];
+
+if(organization === undefined) {
+	return;
+}
 
 const github = new GitHubApi({
     debug: true,
@@ -21,16 +29,16 @@ github.authenticate({
 });
 
 github.repos.getForUser({
-	user: '99xt',
+	user: organization,
 	type: 'owner'
 }, (err, repos) => {
 	if(err) {
-		console.log(err);
+		//console.log(err);
 	}
 	else {
 		repos.map((repo) => {
 			github.issues.createLabel({
-				owner: '99xt',
+				owner: organization,
 				repo: repo.name,
 				name: 'hacktoberfest',
 				color: '800080'
@@ -38,9 +46,20 @@ github.repos.getForUser({
 				if(error) {
 					console.log(error);
 				}
-				else {
-					console.log(status);
-				}
+				github.issues.getForRepo({
+					owner: organization,
+					repo: repo.name
+				}, (errIssue, issues) => {
+					issues.map((issue) => {
+						console.log(issue);
+						github.issues.addLabels({
+							owner: organization,
+							repo: repo.name,
+							number: issue.number,
+							body: ['hacktoberfest']
+						});
+					});
+				});
 			});
 		});
 	}

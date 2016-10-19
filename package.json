@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "GitHub label maker",
   "main": "index.js",
+  "bin": {
+        "gh-label": "./index.js"
+  },
   "scripts": {
     "test": "mocha"
   },
