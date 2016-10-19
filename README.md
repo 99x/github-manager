@@ -1,5 +1,7 @@
 # gh-label-maker
 
+A CLI to add labels for repositories
+
 ```
 npm install -g github-label-maker
 ```
