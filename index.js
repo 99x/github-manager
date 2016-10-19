@@ -1,11 +1,13 @@
 #!/usr/bin/env node
 
 const GitHubApi = require("github");
+const Promise = require('bluebird');
 const credentials = require('./config/credentials');
-
 const organization = process.argv[2];
+const labelName = process.argv[3];
+const labelColor = process.argv[4];
 
-if(organization === undefined) {
+if(!organization || !labelName || !labelColor) {
 	return;
 }
 
@@ -17,50 +19,54 @@ const github = new GitHubApi({
     headers: {
         "user-agent": "My-Cool-GitHub-App"
     },
-    Promise: require('bluebird'),
+    Promise: Promise,
     followRedirects: false,
     timeout: 5000
 });
 
 github.authenticate({
-    type: "basic",
-    username: credentials.username,
-    password: credentials.password
+	type: "token",
+	token: '435eaccab6c784f14916506221095ca2244f5b15'
 });
 
-github.repos.getForUser({
-	user: organization,
-	type: 'owner'
-}, (err, repos) => {
-	if(err) {
-		//console.log(err);
-	}
-	else {
-		repos.map((repo) => {
-			github.issues.createLabel({
-				owner: organization,
-				repo: repo.name,
-				name: 'hacktoberfest',
-				color: '800080'
-			}, (error, status) => {
-				if(error) {
-					console.log(error);
-				}
-				github.issues.getForRepo({
-					owner: organization,
-					repo: repo.name
-				}, (errIssue, issues) => {
-					issues.map((issue) => {
-						console.log(issue);
-						github.issues.addLabels({
-							owner: organization,
-							repo: repo.name,
-							number: issue.number,
-							body: ['hacktoberfest']
-						});
-					});
-				});
-			});
-		});
-	}
-});
+Promise.promisifyAll(github.issues);
+Promise.promisifyAll(github.repos);
+
+function getRepositories(user) {
+	return github.repos.getForUser({
+		user: user,
+		type: 'owner'
+	});
+}
+
+function createLabel(repository, owner, name, color) {
+	return github.issues.createLabel({
+		owner: owner,
+		repo: repository.name,
+		name: name,
+		color: color
+	});
+}
+
+function getIssues(repository, owner) {
+	return github.issues.getForRepo({
+		owner: owner,
+		repo: repository.name
+	});
+}
+
+function addLabels(repository, issue, owner, labels) {
+	github.issues.addLabels({
+		owner: owner,
+		repo: repository.name,
+		number: issue.number,
+		body: labels
+	});
+}
+
+getRepositories(organization)
+	.each(repository => createLabel(repository, organization, labelName, labelColor))
+	.each(repository => {
+		getIssues(repository, organization)
+		.each(issue => addLabels(repository, issue, organization, [labelName]))
+	});
