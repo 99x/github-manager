@@ -1,9 +1,10 @@
-#!/usr/bin/env node
-
 const GitHubApi = require("github");
-const credentials = require('./config/credentials');
+const  readlineSync = require('readline-sync');
 
 const organization = process.argv[2];
+ 
+let userName = readlineSync.question('Enter your Github Username: ');
+let password = readlineSync.question('Enter your Github Password: ', { hideEchoBack: true });
 
 if(organization === undefined) {
 	return;
@@ -24,17 +25,15 @@ const github = new GitHubApi({
 
 github.authenticate({
     type: "basic",
-    username: credentials.username,
-    password: credentials.password
+    username: username,
+    password: password
 });
 
 github.repos.getForUser({
 	user: organization,
 	type: 'owner'
 }, (err, repos) => {
-	if(err) {
-		//console.log(err);
-	}
+	if(err) console.log(err);
 	else {
 		repos.map((repo) => {
 			github.issues.createLabel({
