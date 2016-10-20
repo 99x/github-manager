@@ -1,19 +1,9 @@
 const GitHubApi = require("github");
 const Promise = require('bluebird');
-const readlineSync = require('readline-sync');
-const organization = process.argv[2];
-const labelName = process.argv[3];
-const labelColor = process.argv[4];
-
-const username = readlineSync.question('Enter your Github Username: ');
-const password = readlineSync.question('Enter your Github Password: ', { hideEchoBack: true });
-
-if(!organization || !labelName || !labelColor) {
-	return;
-}
+const inquirer = require('inquirer');
 
 const github = new GitHubApi({
-    debug: true,
+    debug: false,
     protocol: "https",
     host: "api.github.com",
     pathPrefix: "",
@@ -23,12 +13,6 @@ const github = new GitHubApi({
     Promise: Promise,
     followRedirects: false,
     timeout: 5000
-});
-
-github.authenticate({
-	type: "basic",
-    username: username,
-    password: password
 });
 
 Promise.promisifyAll(github.issues);
@@ -54,7 +38,7 @@ function getIssues(repository, owner) {
 	return github.issues.getForRepo({
 		owner: owner,
 		repo: repository.name
-	});
+	}).each(issue => issue.repo = repository);
 }
 
 function addLabels(repository, issue, owner, labels) {
@@ -66,9 +50,86 @@ function addLabels(repository, issue, owner, labels) {
 	});
 }
 
-getRepositories(organization)
-	.each(repository => createLabel(repository, organization, labelName, labelColor))
-	.each(repository => {
-		getIssues(repository, organization)
-		.each(issue => addLabels(repository, issue, organization, [labelName]))
-	});
+Promise.coroutine(function*() {
+    const {username, password} = yield inquirer.prompt([
+        {
+            type: 'input',
+            name: 'username',
+            message: 'Enter your GitHub username:'
+        },
+        {
+            type: 'password',
+            name: 'password',
+            message: 'Enter your GitHub password:'
+        }
+    ]);
+
+    // This is synchronous
+    github.authenticate({
+    	type: "basic",
+        username: username,
+        password: password
+    });
+
+    const {owner} = yield inquirer.prompt([
+        {
+            type: 'input',
+            name: 'owner',
+            message: 'Enter the owner of the repositories:'
+        }
+    ]);
+
+    const repositories = yield getRepositories(owner);
+    const {selectedRepositories} = yield inquirer.prompt([
+        {
+            type: 'checkbox',
+            name: 'selectedRepositories',
+            choices: repositories.map(repo => ({name: repo.name, value: repo})),
+            message: 'Please select the repositories:'
+        }
+    ]);
+
+    const issues = yield Promise.all(selectedRepositories.map(repo => getIssues(repo, owner)))
+                                .reduce((all, current) => all.concat(current));
+
+    const {selectedIssues} = yield inquirer.prompt([
+        {
+            type: 'checkbox',
+            name: 'selectedIssues',
+            choices: issues.map(issue => ({name: issue.title, value: issue})),
+            message: 'Please select the issues:'
+        }
+    ]);
+
+    if(selectedIssues.length === 0)
+        return;
+
+    const label = yield inquirer.prompt([
+        {
+            type: 'input',
+            name: 'name',
+            message: 'Please enter the label name:'
+        },
+        {
+            type: 'input',
+            name: 'color',
+            message: 'Please select the color:',
+            validate: color => /^[0-9a-fA-F]{6}$/.test(color) || 'Input a color as a 6 digit hex code.'
+        }
+    ]);
+
+    yield Promise.resolve(selectedRepositories)
+                    .each(repo => createLabel(repo, owner, label.name, label.color));
+
+    yield Promise.resolve(selectedIssues)
+                    .each(issue => addLabels(issue.repo, issue, owner, [label.name]));
+})();
+
+/*
+then(() => getRepositories(organization))
+    .each()
+    .each(repository => {
+    	getIssues(repository, organization)
+    	.each(issue => addLabels(repository, issue, organization, [labelName]))
+    });
+    */

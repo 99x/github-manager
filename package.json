@@ -7,6 +7,7 @@
     "gh-label": "./index.js"
   },
   "scripts": {
+    "start": "node index.js",
     "test": "mocha"
   },
   "keywords": [
@@ -20,8 +21,8 @@
     "bluebird": "^3.4.6",
     "chai": "^3.5.0",
     "github": "^5.2.2",
-    "mocha": "^3.1.2",
-    "readline-sync": "^1.4.4"
+    "inquirer": "^1.2.2",
+    "mocha": "^3.1.2"
   },
   "devDependencies": {
     "shelljs": "^0.7.4"
