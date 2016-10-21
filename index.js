@@ -89,6 +89,9 @@ Promise.coroutine(function*() {
         }
     ]);
 
+    if(selectedRepositories.length == 0)
+        return;
+
     const issues = yield Promise.all(selectedRepositories.map(repo => getIssues(repo, owner)))
                                 .reduce((all, current) => all.concat(current));
 
@@ -119,17 +122,25 @@ Promise.coroutine(function*() {
     ]);
 
     yield Promise.resolve(selectedRepositories)
-                    .each(repo => createLabel(repo, owner, label.name, label.color));
+                    .each(repo => createLabel(repo, owner, label.name, label.color))
+                    .then(() => selectedIssues, () => selectedIssues)
+                    .each(issue => addLabels(issue.repo, issue, owner, [label.name]))
+})().catch(e => displayError(e));
 
-    yield Promise.resolve(selectedIssues)
-                    .each(issue => addLabels(issue.repo, issue, owner, [label.name]));
-})();
+function displayError(error) {
+    if(!error) {
+        console.log('Unknown error :/');
+        return;
+    }
 
-/*
-then(() => getRepositories(organization))
-    .each()
-    .each(repository => {
-    	getIssues(repository, organization)
-    	.each(issue => addLabels(repository, issue, organization, [labelName]))
-    });
-    */
+    let errorMessage = error;
+    if(error.message && typeof error.message == 'string') {
+        const json = JSON.parse(error.message);
+        if(json && json.message) {
+            errorMessage = json.message;
+        } else
+            errorMessage = error.message;
+    }
+
+    console.log(`Error: ${errorMessage}`);
+}
