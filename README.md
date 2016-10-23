@@ -1,19 +1,15 @@
-# gh-label-maker
+# gh-label-maker [![Build Status](https://travis-ci.org/99xt/github-label-maker.svg?branch=master)](https://travis-ci.org/99xt/github-label-maker)
 
-A CLI to add labels for repositories
+A CLI to manage GitHub repositories
 
 ```
 npm install -g github-label-maker
 ```
 
-## Configuration
-
-Add GitHub account credentials to file located at `config/credentials.js`
-
 ## Usage
 
 ```
-gh-label [owner]
+$ gh-label
 ```
 
 ### owner

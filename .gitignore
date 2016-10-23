@@ -46,4 +46,5 @@ jspm_packages
 
 # Credentials
 config/credentials.js
+.access-token
 .idea/
