@@ -1,5 +1,5 @@
 {
-  "name": "gh-label-maker",
+  "name": "github-manager-cli",
   "version": "1.0.0",
   "description": "GitHub label maker",
   "main": "index.js",

@@ -1,9 +1,9 @@
-# gh-label-maker
+# github-manager-cli
 
 A CLI to add labels for repositories
 
 ```
-npm install -g github-label-maker
+npm install -g github-manager-cli
 ```
 
 ## Configuration
