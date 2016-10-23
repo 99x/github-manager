@@ -3,7 +3,7 @@
 A CLI to manage GitHub repositories
 
 ```
-npm install -g github-label-maker
+npm i github-manager-cli
 ```
 
 ## Usage
