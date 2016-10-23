@@ -45,4 +45,5 @@ jspm_packages
 *.tgz
 
 # Credentials
+config/credentials.js
 .idea/
