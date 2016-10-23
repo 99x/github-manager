@@ -1,6 +1,8 @@
 const GitHubApi = require("github");
 const Promise = require('bluebird');
 const inquirer = require('inquirer');
+// you can define your github-credentials in this file, so you don't have to type it every time
+const credentials = require('./config/credentials');
 
 const github = new GitHubApi({
     debug: false,
@@ -18,55 +20,60 @@ const github = new GitHubApi({
 Promise.promisifyAll(github.issues);
 Promise.promisifyAll(github.repos);
 
+
 function getRepositories(user) {
-	return github.repos.getForUser({
-		user: user,
-		type: 'owner'
-	});
+    return github.repos.getForUser({
+        user: user,
+        type: 'owner'
+    });
 }
 
 function createLabel(repository, owner, name, color) {
-	return github.issues.createLabel({
-		owner: owner,
-		repo: repository.name,
-		name: name,
-		color: color
-	});
+    return github.issues.createLabel({
+        owner: owner,
+        repo: repository.name,
+        name: name,
+        color: color
+    });
 }
 
 function getIssues(repository, owner) {
-	return github.issues.getForRepo({
-		owner: owner,
-		repo: repository.name
-	}).each(issue => issue.repo = repository);
+    return github.issues.getForRepo({
+        owner: owner,
+        repo: repository.name
+    }).each(issue => issue.repo = repository);
 }
 
 function addLabels(repository, issue, owner, labels) {
-	github.issues.addLabels({
-		owner: owner,
-		repo: repository.name,
-		number: issue.number,
-		body: labels
-	});
+    github.issues.addLabels({
+        owner: owner,
+        repo: repository.name,
+        number: issue.number,
+        body: labels
+    });
 }
 
 Promise.coroutine(function*() {
-    const {username, password} = yield inquirer.prompt([
-        {
-            type: 'input',
-            name: 'username',
-            message: 'Enter your GitHub username:'
-        },
-        {
-            type: 'password',
-            name: 'password',
-            message: 'Enter your GitHub password:'
-        }
-    ]);
+
+    // check for credentials-file
+    const {username, password} = (credentials && credentials.username != '' && credentials.password != '')
+        ? credentials
+        : yield inquirer.prompt([
+            {
+                type: 'input',
+                name: 'username',
+                message: 'Enter your GitHub username:'
+            },
+            {
+                type: 'password',
+                name: 'password',
+                message: 'Enter your GitHub password:'
+            }
+        ]);
 
     // This is synchronous
     github.authenticate({
-    	type: "basic",
+        type: "basic",
         username: username,
         password: password
     });
@@ -89,11 +96,12 @@ Promise.coroutine(function*() {
         }
     ]);
 
-    if(selectedRepositories.length == 0)
+    if (selectedRepositories.length == 0) {
         return;
+    }
 
     const issues = yield Promise.all(selectedRepositories.map(repo => getIssues(repo, owner)))
-                                .reduce((all, current) => all.concat(current));
+        .reduce((all, current) => all.concat(current));
 
     const {selectedIssues} = yield inquirer.prompt([
         {
@@ -104,8 +112,9 @@ Promise.coroutine(function*() {
         }
     ]);
 
-    if(selectedIssues.length === 0)
+    if (selectedIssues.length === 0) {
         return;
+    }
 
     const label = yield inquirer.prompt([
         {
@@ -122,24 +131,25 @@ Promise.coroutine(function*() {
     ]);
 
     yield Promise.resolve(selectedRepositories)
-                    .each(repo => createLabel(repo, owner, label.name, label.color))
-                    .then(() => selectedIssues, () => selectedIssues)
-                    .each(issue => addLabels(issue.repo, issue, owner, [label.name]))
+        .each(repo => createLabel(repo, owner, label.name, label.color))
+        .then(() => selectedIssues, () => selectedIssues)
+        .each(issue => addLabels(issue.repo, issue, owner, [label.name]))
 })().catch(e => displayError(e));
 
 function displayError(error) {
-    if(!error) {
+    if (!error) {
         console.log('Unknown error :/');
         return;
     }
 
     let errorMessage = error;
-    if(error.message && typeof error.message == 'string') {
+    if (error.message && typeof error.message == 'string') {
         const json = JSON.parse(error.message);
-        if(json && json.message) {
+        if (json && json.message) {
             errorMessage = json.message;
-        } else
+        } else {
             errorMessage = error.message;
+        }
     }
 
     console.log(`Error: ${errorMessage}`);
