@@ -1,6 +1,7 @@
 const GitHubApi = require("github");
 const Promise = require('bluebird');
 const inquirer = require('inquirer');
+const fs = require('fs');
 
 const github = new GitHubApi({
     debug: false,
@@ -15,6 +16,7 @@ const github = new GitHubApi({
     timeout: 5000
 });
 
+Promise.promisifyAll(github.authorization);
 Promise.promisifyAll(github.issues);
 Promise.promisifyAll(github.repos);
 
@@ -50,8 +52,8 @@ function addLabels(repository, issue, owner, labels) {
 	});
 }
 
-Promise.coroutine(function*() {
-    const {username, password} = yield inquirer.prompt([
+function loginBasic() {
+     return inquirer.prompt([
         {
             type: 'input',
             name: 'username',
@@ -62,14 +64,42 @@ Promise.coroutine(function*() {
             name: 'password',
             message: 'Enter your GitHub password:'
         }
-    ]);
-
-    // This is synchronous
-    github.authenticate({
-    	type: "basic",
-        username: username,
-        password: password
+    ]).then(login => {
+        github.authenticate({
+        	type: "basic",
+            username: login.username,
+            password: login.password
+        });
     });
+}
+
+function loginToken() {
+    return new Promise(function(resolve, reject) {
+        fs.readFile('.access-token', function(error, token) {
+            if(error) reject(error);
+            else resolve(github.authenticate({ type: "token", token: token }));
+        });
+    });
+}
+
+function createToken() {
+    return inquirer.prompt([
+        {
+            type: 'confirm',
+            name: 'confirmToken',
+            message: 'Do you wish to create an access token to GitHub?'
+        }
+    ]).then(answer => {
+        if(answer.confirmToken)
+            return github.authorization.create({
+                scopes: ['repo'],
+                note: 'github-manager-cli'
+            }).then(result => fs.writeFile('.access-token', result.token));
+    });
+}
+
+Promise.coroutine(function*() {
+    yield loginToken().catch(error => loginBasic().then(createToken));
 
     const {owner} = yield inquirer.prompt([
         {
