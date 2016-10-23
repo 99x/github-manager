@@ -2,6 +2,7 @@ const GitHubApi = require("github");
 const Promise = require('bluebird');
 const inquirer = require('inquirer');
 const fs = require('fs');
+const predefinedLabels = require('./config/labels');
 
 const github = new GitHubApi({
     debug: false,
@@ -33,7 +34,13 @@ function createLabel(repository, owner, name, color) {
         repo: repository.name,
         name: name,
         color: color
-    });
+    }, function(err, res) {
+        if (err && err.code == 422) {
+            console.log("Label: '" + name + "' already exists in repo '" + repository.name + "'");
+        } else {
+            console.log("Label: '" + name + "' created in repo '" + repository.name + "'");
+        }
+    })
 }
 
 function getIssues(repository, owner) {
@@ -127,6 +134,20 @@ Promise.coroutine(function*() {
         return;
     }
 
+    const {addPredefinedLabels} = yield inquirer.prompt([
+        {
+            type: 'confirm',
+            name: 'addPredefinedLabels',
+            message: 'Do you want to add your predefined labels to the selected Repositories?'
+        }
+    ]);
+
+    if (addPredefinedLabels) {
+        yield Promise.resolve(predefinedLabels)
+            .each(label => selectedRepositories.map(repo => createLabel(repo, owner, label.name, label.color)))
+        return
+    }
+
     const issues = yield Promise.all(selectedRepositories.map(repo => getIssues(repo, owner)))
         .reduce((all, current) => all.concat(current));
 
@@ -161,6 +182,7 @@ Promise.coroutine(function*() {
         .each(repo => createLabel(repo, owner, label.name, label.color))
         .then(() => selectedIssues, () => selectedIssues)
         .each(issue => addLabels(issue.repo, issue, owner, [label.name]))
+
 })().catch(e => displayError(e));
 
 function displayError(error) {
