@@ -1,4 +1,4 @@
-# gh-label-maker [![Build Status](https://travis-ci.org/99xt/github-label-maker.svg?branch=master)](https://travis-ci.org/99xt/github-label-maker)
+# github-manager-cli [![Build Status](https://travis-ci.org/99xt/github-label-maker.svg?branch=master)](https://travis-ci.org/99xt/github-label-maker)
 
 A CLI to manage GitHub repositories
 
