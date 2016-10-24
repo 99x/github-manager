@@ -2,6 +2,7 @@ const GitHubApi = require("github");
 const Promise = require('bluebird');
 const inquirer = require('inquirer');
 const fs = require('fs');
+const predefinedLabels = require('./config/labels');
 
 const github = new GitHubApi({
     debug: false,
@@ -43,10 +44,10 @@ function createLabel(repository, owner, name, color) {
 }
 
 function getIssues(repository, owner) {
-    return github.issues.getForRepo({
-        owner: owner,
-        repo: repository.name
-    }).each(issue => issue.repo = repository);
+	return github.issues.getForRepo({
+		owner: owner,
+		repo: repository.name
+	}).each(issue => issue.repo = repository);
 }
 
 function getLabels(repository, owner) {
@@ -57,12 +58,12 @@ function getLabels(repository, owner) {
 }
 
 function addLabels(repository, issue, owner, labels) {
-    github.issues.addLabels({
-        owner: owner,
-        repo: repository.name,
-        number: issue.number,
-        body: labels
-    });
+	github.issues.addLabels({
+		owner: owner,
+		repo: repository.name,
+		number: issue.number,
+		body: labels
+	});
 }
 
 function loginBasic() {
@@ -183,6 +184,21 @@ Promise.coroutine(function*() {
 
     if (selectedRepositories.length == 0) {
         return;
+    }
+    }
+
+    const {addPredefinedLabels} = yield inquirer.prompt([
+        {
+            type: 'confirm',
+            name: 'addPredefinedLabels',
+            message: 'Do you want to add your predefined labels to the selected Repositories?'
+        }
+    ]);
+
+    if (addPredefinedLabels) {
+        yield Promise.resolve(predefinedLabels)
+            .each(label => selectedRepositories.map(repo => createLabel(repo, owner, label.name, label.color)))
+        return
     }
 
     const issues = yield Promise.all(selectedRepositories.map(repo => getIssues(repo, owner)))
