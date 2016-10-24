@@ -34,29 +34,36 @@ function createLabel(repository, owner, name, color) {
         repo: repository.name,
         name: name,
         color: color
-    }, function(err, res) {
+    }, function (err, res) {
         if (err && err.code == 422) {
             console.log("Label: '" + name + "' already exists in repo '" + repository.name + "'");
         } else {
             console.log("Label: '" + name + "' created in repo '" + repository.name + "'");
         }
-    })
+    });
 }
 
 function getIssues(repository, owner) {
-    return github.issues.getForRepo({
+	return github.issues.getForRepo({
+		owner: owner,
+		repo: repository.name
+	}).each(issue => issue.repo = repository);
+}
+
+function getLabels(repository, owner) {
+    return github.issues.getLabels({
         owner: owner,
         repo: repository.name
-    }).each(issue => issue.repo = repository);
+    }).map(label => ({name: label.name, color: label.color}));
 }
 
 function addLabels(repository, issue, owner, labels) {
-    github.issues.addLabels({
-        owner: owner,
-        repo: repository.name,
-        number: issue.number,
-        body: labels
-    });
+	github.issues.addLabels({
+		owner: owner,
+		repo: repository.name,
+		number: issue.number,
+		body: labels
+	});
 }
 
 function loginBasic() {
@@ -121,17 +128,63 @@ Promise.coroutine(function*() {
     ]);
 
     const repositories = yield getRepositories(owner);
+
+    const {confirmLabelCopy} = yield inquirer.prompt([
+        {
+            type: 'confirm',
+            name: 'confirmLabelCopy',
+            message: 'Do you want to copy labels from one repo to another?'
+        }
+    ]);
+
+    if (confirmLabelCopy) {
+
+        const {copyFromRepository} = yield inquirer.prompt([
+            {
+                type: 'list',
+                name: 'copyFromRepository',
+                choices: repositories.map(repo => ({name: repo.name, value: repo})),
+                message: 'Please select the repository to copy FROM:'
+            }
+        ]);
+
+        if (copyFromRepository.length == 0) {
+            return;
+        }
+
+        const labels = yield Promise.all(getLabels(copyFromRepository, owner));
+
+        const {copyToRepositories} = yield inquirer.prompt([
+            {
+                type: 'checkbox',
+                name: 'copyToRepositories',
+                choices: repositories.map(repo => ({name: repo.name, value: repo})),
+                message: 'Please select the repositories to copy TO:'
+            }
+        ]);
+
+        if (copyToRepositories.length == 0) {
+            return;
+        }
+
+        yield Promise.resolve(labels)
+            .each(label => copyToRepositories.map(repo => createLabel(repo, owner, label.name, label.color)))
+
+        return
+    }
+
     const {selectedRepositories} = yield inquirer.prompt([
         {
             type: 'checkbox',
             name: 'selectedRepositories',
             choices: repositories.map(repo => ({name: repo.name, value: repo})),
-            message: 'Please select the repositories:'
+            message: 'Please select the repositories where you want to add labels to issues:'
         }
     ]);
 
     if (selectedRepositories.length == 0) {
         return;
+    }
     }
 
     const {addPredefinedLabels} = yield inquirer.prompt([
@@ -180,9 +233,8 @@ Promise.coroutine(function*() {
 
     yield Promise.resolve(selectedRepositories)
         .each(repo => createLabel(repo, owner, label.name, label.color))
-        .then(() => selectedIssues, () => selectedIssues)
+        .then(() => selectedIssues)
         .each(issue => addLabels(issue.repo, issue, owner, [label.name]))
-
 })().catch(e => displayError(e));
 
 function displayError(error) {
