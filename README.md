@@ -1,4 +1,4 @@
-# github-manager-cli [![Build Status](https://travis-ci.org/99xt/github-manager-cli.svg?branch=master)](https://travis-ci.org/99xt/github-manager-cli)
+# github-manager-cli [![Build Status](https://travis-ci.org/99xt/github-manager-cli.svg?branch=master)](https://travis-ci.org/99xt/github-manager-cli)  [![Codacy Badge](https://api.codacy.com/project/badge/Grade/33e92f8ba07748a987da853e90aa3f55)](https://www.codacy.com/app/99xt/github-manager-cli?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=99xt/github-manager-cli&amp;utm_campaign=Badge_Grade)
 
 A CLI to manage GitHub repositories
 
