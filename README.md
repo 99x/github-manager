@@ -1,9 +1,9 @@
-# github-manager-cli [![Build Status](https://travis-ci.org/99xt/github-label-maker.svg?branch=master)](https://travis-ci.org/99xt/github-label-maker)
+# github-manager-cli [![Build Status](https://travis-ci.org/99xt/github-manager-cli.svg?branch=master)](https://travis-ci.org/99xt/github-manager-cli)
 
 A CLI to manage GitHub repositories
 
 ```
-npm i github-manager-cli
+npm i -g github-manager-cli
 ```
 
 ## Usage
