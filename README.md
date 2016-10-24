@@ -22,6 +22,7 @@ Owner of the repository (user/organization)
 - Clone the forked repository.
 - Create your own branch.
 - Create tests and make sure tests pass on travis.
+- Usage section of Readme should be update for new features
 - Create a pull request with changes made.
 
 ## License
