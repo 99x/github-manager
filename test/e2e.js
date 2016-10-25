@@ -1,4 +1,4 @@
-var spawn = require("child_process").spawn;
+const spawn = require("child_process").spawn;
 
 describe("end-to-end", function() {
   this.timeout(10000);
