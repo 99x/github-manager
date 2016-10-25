@@ -25,6 +25,8 @@ Owner of the repository (user/organization)
 - Usage section of Readme should be update for new features
 - Create a pull request with changes made.
 
+To run existing tests provide `USER_NAME` and `USER_PASS` environment variables with GitHub account for testing(or just `USER_NAME` for unit tests).
+
 ## License
 
 MIT © [99XT](https://github.com/99xt)

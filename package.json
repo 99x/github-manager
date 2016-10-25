@@ -8,7 +8,7 @@
   },
   "scripts": {
     "start": "node index.js",
-    "test": "mocha"
+    "test": "istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- -R spec && cat ./coverage/lcov.info | codacy-coverage && rm -rf ./coverage"
   },
   "keywords": [
     "github",
@@ -21,10 +21,11 @@
     "bluebird": "^3.4.6",
     "chai": "^3.5.0",
     "github": "^5.2.2",
-    "inquirer": "^1.2.2",
-    "mocha": "^3.1.2"
+    "inquirer": "^1.2.2"
   },
   "devDependencies": {
-    "shelljs": "^0.7.4"
+    "codacy-coverage": "^2.0.0",
+    "istanbul": "^0.4.5",
+    "mocha": "^3.1.2"
   }
 }

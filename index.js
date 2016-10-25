@@ -34,12 +34,17 @@ function createLabel(repository, owner, name, color) {
         repo: repository.name,
         name: name,
         color: color
-    }, function (err, res) {
-        if (err && err.code == 422) {
-            console.log("Label: '" + name + "' already exists in repo '" + repository.name + "'");
-        } else {
-            console.log("Label: '" + name + "' created in repo '" + repository.name + "'");
-        }
+    }).then(function() {
+      return console.log("Label: '" + name + "' created in repo '" + repository.name + "'");
+    }).catch(function(err) {
+      if (err && err.code === 422) {
+          console.log("Label: '" + name + "' already exists in repo '" + repository.name + "'");
+      } else {
+          console.log("Failed to create label in '" + repository.name + "'");
+      }
+      
+      // Propagate error to the tests
+      throw err;
     });
 }
 
@@ -58,7 +63,7 @@ function getLabels(repository, owner) {
 }
 
 function addLabels(repository, issue, owner, labels) {
-	github.issues.addLabels({
+	return github.issues.addLabels({
 		owner: owner,
 		repo: repository.name,
 		number: issue.number,
@@ -185,7 +190,6 @@ Promise.coroutine(function*() {
     if (selectedRepositories.length == 0) {
         return;
     }
-    }
 
     const {addPredefinedLabels} = yield inquirer.prompt([
         {
@@ -240,12 +244,16 @@ Promise.coroutine(function*() {
 function displayError(error) {
     if (!error) {
         console.log('Unknown error :/');
-        return;
+        return 'Unknown error :/';
     }
 
     let errorMessage = error;
     if (error.message && typeof error.message == 'string') {
-        const json = JSON.parse(error.message);
+        let json;
+        try {
+          json = JSON.parse(error.message);
+        } catch(err) { /* Failed to parse JSON */ }
+        
         if (json && json.message) {
             errorMessage = json.message;
         } else {
@@ -254,4 +262,8 @@ function displayError(error) {
     }
 
     console.log(`Error: ${errorMessage}`);
+    return `Error: ${errorMessage}`;
 }
+
+// Export functions for testing purposes
+module.exports = { displayError, addLabels, getLabels, getIssues, createLabel, getRepositories };
