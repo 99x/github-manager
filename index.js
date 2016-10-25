@@ -37,7 +37,7 @@ function createLabel(repository, owner, name, color) {
     }).then(function() {
       return console.log("Label: '" + name + "' created in repo '" + repository.name + "'");
     }).catch(function(err) {
-      if (err && err.code == 422) {
+      if (err && err.code === 422) {
           console.log("Label: '" + name + "' already exists in repo '" + repository.name + "'");
       } else {
           console.log("Failed to create label in '" + repository.name + "'");
