@@ -12,7 +12,7 @@ npm i -g github-manager-cli
 $ gh-label
 ```
 
-### owner
+### Owner
 
 Owner of the repository (user/organization)
 
@@ -20,9 +20,9 @@ Owner of the repository (user/organization)
 
 - Fork the repository.
 - Clone the forked repository.
-- Create your own branch.
+- Create and work on your own branch.
 - Create tests and make sure tests pass on travis.
-- Usage section of Readme should be update for new features
+- Usage section of Readme should be update for new features.
 - Create a pull request with changes made.
 
 To run existing tests provide `USER_NAME` and `USER_PASS` environment variables with GitHub account for testing(or just `USER_NAME` for unit tests).
