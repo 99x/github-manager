@@ -2,19 +2,24 @@
 
 A CLI to manage GitHub repositories
 
+> under development
+
 ```
 npm i -g github-manager-cli
 ```
+
+Features
+
+* Manage multiple repositories at once
+* Manage multiple repositories of an organization or a user
+* Add labels to repositories
+* Add labels to specific issues
 
 ## Usage
 
 ```
 $ gh-label
 ```
-
-### owner
-
-Owner of the repository (user/organization)
 
 ## Contributor guidelines
 
@@ -24,6 +29,8 @@ Owner of the repository (user/organization)
 - Create tests and make sure tests pass on travis.
 - Usage section of Readme should be update for new features
 - Create a pull request with changes made.
+
+## Developer guide
 
 To run existing tests provide `USER_NAME` and `USER_PASS` environment variables with GitHub account for testing(or just `USER_NAME` for unit tests).
 
