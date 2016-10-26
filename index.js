@@ -1,10 +1,11 @@
-const GitHubApi = require("github");
+const gitHubApi = require("github");
 const Promise = require('bluebird');
 const inquirer = require('inquirer');
 const fs = require('fs');
 const predefinedLabels = require('./config/labels');
 
-const github = new GitHubApi({
+//initialize GitHub API from node-github
+const github = new gitHubApi({
     debug: false,
     protocol: "https",
     host: "api.github.com",
@@ -17,6 +18,7 @@ const github = new GitHubApi({
     timeout: 5000
 });
 
+//Promisify github API with Bluebird
 Promise.promisifyAll(github.authorization);
 Promise.promisifyAll(github.issues);
 Promise.promisifyAll(github.repos);
@@ -27,6 +29,14 @@ function getRepositories(user) {
         type: 'owner'
     });
 }
+
+/**
+ * create label
+ * @param {string} repository - repo name
+ * @param {string} owner - repo owner
+ * @param {string} name - label name
+ * @param {string} color - label color without `#`
+ */
 
 function createLabel(repository, owner, name, color) {
     return github.issues.createLabel({
@@ -48,6 +58,12 @@ function createLabel(repository, owner, name, color) {
     });
 }
 
+/**
+ * get issues
+ * @param {string} repository - repo name
+ * @param {string} owner - repo owner
+ */
+
 function getIssues(repository, owner) {
 	return github.issues.getForRepo({
 		owner: owner,
@@ -55,12 +71,26 @@ function getIssues(repository, owner) {
 	}).each(issue => issue.repo = repository);
 }
 
+/**
+ * get labels
+ * @param {string} repository - repo name
+ * @param {string} owner - repo owner
+ */
+
 function getLabels(repository, owner) {
     return github.issues.getLabels({
         owner: owner,
         repo: repository.name
     }).map(label => ({name: label.name, color: label.color}));
 }
+
+/**
+ * add labels
+ * @param {string} repository - repo name
+ * @param {string} owner - repo owner
+ * @param {string} name - label name
+ * @param {string} color - label color without `#`
+ */
 
 function addLabels(repository, issue, owner, labels) {
 	return github.issues.addLabels({
@@ -70,6 +100,10 @@ function addLabels(repository, issue, owner, labels) {
 		body: labels
 	});
 }
+
+/**
+ * login to GitHub
+ */
 
 function loginBasic() {
     return inquirer.prompt([
@@ -92,6 +126,10 @@ function loginBasic() {
     });
 }
 
+/**
+ * retrieve login token
+ */
+
 function loginToken() {
     return new Promise(function (resolve, reject) {
         fs.readFile('.access-token', function (error, token) {
@@ -103,6 +141,10 @@ function loginToken() {
         });
     });
 }
+
+/**
+ * create token
+ */
 
 function createToken() {
     return inquirer.prompt([
