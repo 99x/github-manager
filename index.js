@@ -23,12 +23,23 @@ Promise.promisifyAll(github.authorization);
 Promise.promisifyAll(github.issues);
 Promise.promisifyAll(github.repos);
 
+/**
+ * get repositories
+ * @param {string} user - username
+ */
+
 function getRepositories(user) {
     return github.repos.getForUser({
         user: user,
         type: 'owner'
     });
 }
+
+/**
+ * get repository commits
+ * @param {string} repositorie - repositories
+ * @param {string} owner - repo owner
+ */
 
 function getRepositoryCommits(repositories, owner) {
     return repositories.map(repo => {
@@ -40,6 +51,12 @@ function getRepositoryCommits(repositories, owner) {
     });
 }
 
+/**
+ * get repository pull requests
+ * @param {string} repositorie - repositories
+ * @param {string} owner - repo owner
+ */
+
 function getRepositoryPullRequests(repositories, owner) {
     return repositories.map(repo => {
         return github.pullRequests.getAll({
@@ -49,6 +66,11 @@ function getRepositoryPullRequests(repositories, owner) {
         });
     });
 }
+
+/**
+ * get issues for Organization
+ * @param {string} owner - repo owner
+ */
 
 function getNoOfIssuesForOrg(owner) {
     return github.issues.getForOrg({
