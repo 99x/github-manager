@@ -12,6 +12,12 @@ npm i -g github-manager-cli
 $ gh-label
 ```
 
+### Generate report
+
+```
+$ gh-label --report
+```
+
 ### owner
 
 Owner of the repository (user/organization)
