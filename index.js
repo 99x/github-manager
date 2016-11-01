@@ -1,10 +1,11 @@
-const GitHubApi = require("github");
+const gitHubApi = require("github");
 const Promise = require('bluebird');
 const inquirer = require('inquirer');
 const fs = require('fs');
 const predefinedLabels = require('./config/labels');
 
-const github = new GitHubApi({
+//initialize GitHub API from node-github
+const github = new gitHubApi({
     debug: false,
     protocol: "https",
     host: "api.github.com",
@@ -17,9 +18,15 @@ const github = new GitHubApi({
     timeout: 5000
 });
 
+//Promisify github API with Bluebird
 Promise.promisifyAll(github.authorization);
 Promise.promisifyAll(github.issues);
 Promise.promisifyAll(github.repos);
+
+/**
+ * get repositories
+ * @param {string} user - username
+ */
 
 function getRepositories(user) {
     return github.repos.getForUser({
@@ -27,6 +34,59 @@ function getRepositories(user) {
         type: 'owner'
     });
 }
+
+/**
+ * get repository commits
+ * @param {string} repositorie - repositories
+ * @param {string} owner - repo owner
+ */
+
+function getRepositoryCommits(repositories, owner) {
+    return repositories.map(repo => {
+        return github.repos.getCommits({
+            owner: owner,
+            repo: repo.name,
+            per_page: 100
+        });
+    });
+}
+
+/**
+ * get repository pull requests
+ * @param {string} repositorie - repositories
+ * @param {string} owner - repo owner
+ */
+
+function getRepositoryPullRequests(repositories, owner) {
+    return repositories.map(repo => {
+        return github.pullRequests.getAll({
+            owner: owner,
+            repo: repo.name,
+            per_page: 100
+        });
+    });
+}
+
+/**
+ * get issues for Organization
+ * @param {string} owner - repo owner
+ */
+
+function getNoOfIssuesForOrg(owner) {
+    return github.issues.getForOrg({
+        org: owner,
+        state: 'all',
+        per_page: 100
+    });
+}
+
+/**
+ * create label
+ * @param {string} repository - repo name
+ * @param {string} owner - repo owner
+ * @param {string} name - label name
+ * @param {string} color - label color without `#`
+ */
 
 function createLabel(repository, owner, name, color) {
     return github.issues.createLabel({
@@ -48,12 +108,24 @@ function createLabel(repository, owner, name, color) {
     });
 }
 
+/**
+ * get issues
+ * @param {string} repository - repo name
+ * @param {string} owner - repo owner
+ */
+
 function getIssues(repository, owner) {
-	return github.issues.getForRepo({
-		owner: owner,
-		repo: repository.name
-	}).each(issue => issue.repo = repository);
+    return github.issues.getForRepo({
+        owner: owner,
+        repo: repository.name
+    }).each(issue => issue.repo = repository);
 }
+
+/**
+ * get labels
+ * @param {string} repository - repo name
+ * @param {string} owner - repo owner
+ */
 
 function getLabels(repository, owner) {
     return github.issues.getLabels({
@@ -62,14 +134,26 @@ function getLabels(repository, owner) {
     }).map(label => ({name: label.name, color: label.color}));
 }
 
+/**
+ * add labels
+ * @param {string} repository - repo name
+ * @param {string} owner - repo owner
+ * @param {string} name - label name
+ * @param {string} color - label color without `#`
+ */
+
 function addLabels(repository, issue, owner, labels) {
-	return github.issues.addLabels({
-		owner: owner,
-		repo: repository.name,
-		number: issue.number,
-		body: labels
-	});
+    return github.issues.addLabels({
+        owner: owner,
+        repo: repository.name,
+        number: issue.number,
+        body: labels
+    });
 }
+
+/**
+ * login to GitHub
+ */
 
 function loginBasic() {
     return inquirer.prompt([
@@ -92,6 +176,14 @@ function loginBasic() {
     });
 }
 
+function cliReport() {
+
+}
+
+/**
+ * retrieve login token
+ */
+
 function loginToken() {
     return new Promise(function (resolve, reject) {
         fs.readFile('.access-token', function (error, token) {
@@ -103,6 +195,10 @@ function loginToken() {
         });
     });
 }
+
+/**
+ * create token
+ */
 
 function createToken() {
     return inquirer.prompt([
@@ -133,6 +229,28 @@ Promise.coroutine(function*() {
     ]);
 
     const repositories = yield getRepositories(owner);
+
+    if(process.argv[2] === '--report') {
+        const reps = yield Promise.all(getRepositoryCommits(repositories, owner));
+        let totalCommits = 0;
+        reps.map(a => {
+            totalCommits += a.length;
+        });
+
+        const prs = yield Promise.all(getRepositoryPullRequests(repositories, owner));
+        let totalPRs = 0;
+        prs.map(a => {
+            totalPRs += a.length;
+        });
+
+        const issuesForOrg = yield Promise.all(repositories.map(repo => getIssues(repo, owner)))
+
+        console.log('Number of organinzation commits: ', totalCommits);
+        console.log('Number of organinzation PRS: ', totalPRs);
+        console.log('Number of issues: ', issuesForOrg.length);
+
+        process.exit();
+    }
 
     const {confirmLabelCopy} = yield inquirer.prompt([
         {
