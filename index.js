@@ -62,7 +62,8 @@ function getRepositoryPullRequests(repositories, owner) {
         return github.pullRequests.getAll({
             owner: owner,
             repo: repo.name,
-            per_page: 100
+            per_page: 100,
+            state: "all"
         });
     });
 }
