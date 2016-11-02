@@ -23,10 +23,61 @@ Promise.promisifyAll(github.authorization);
 Promise.promisifyAll(github.issues);
 Promise.promisifyAll(github.repos);
 
+/**
+ * get repositories
+ * @param {string} user - username
+ */
+
 function getRepositories(user) {
     return github.repos.getForUser({
         user: user,
         type: 'owner'
+    });
+}
+
+/**
+ * get repository commits
+ * @param {string} repositorie - repositories
+ * @param {string} owner - repo owner
+ */
+
+function getRepositoryCommits(repositories, owner) {
+    return repositories.map(repo => {
+        return github.repos.getCommits({
+            owner: owner,
+            repo: repo.name,
+            per_page: 100
+        });
+    });
+}
+
+/**
+ * get repository pull requests
+ * @param {string} repositorie - repositories
+ * @param {string} owner - repo owner
+ */
+
+function getRepositoryPullRequests(repositories, owner) {
+    return repositories.map(repo => {
+        return github.pullRequests.getAll({
+            owner: owner,
+            repo: repo.name,
+            per_page: 100,
+            state: "all"
+        });
+    });
+}
+
+/**
+ * get issues for Organization
+ * @param {string} owner - repo owner
+ */
+
+function getNoOfIssuesForOrg(owner) {
+    return github.issues.getForOrg({
+        org: owner,
+        state: 'all',
+        per_page: 100
     });
 }
 
@@ -65,10 +116,10 @@ function createLabel(repository, owner, name, color) {
  */
 
 function getIssues(repository, owner) {
-	return github.issues.getForRepo({
-		owner: owner,
-		repo: repository.name
-	}).each(issue => issue.repo = repository);
+    return github.issues.getForRepo({
+        owner: owner,
+        repo: repository.name
+    }).each(issue => issue.repo = repository);
 }
 
 /**
@@ -93,12 +144,12 @@ function getLabels(repository, owner) {
  */
 
 function addLabels(repository, issue, owner, labels) {
-	return github.issues.addLabels({
-		owner: owner,
-		repo: repository.name,
-		number: issue.number,
-		body: labels
-	});
+    return github.issues.addLabels({
+        owner: owner,
+        repo: repository.name,
+        number: issue.number,
+        body: labels
+    });
 }
 
 /**
@@ -124,6 +175,10 @@ function loginBasic() {
             password: login.password
         });
     });
+}
+
+function cliReport() {
+
 }
 
 /**
@@ -175,6 +230,28 @@ Promise.coroutine(function*() {
     ]);
 
     const repositories = yield getRepositories(owner);
+
+    if(process.argv[2] === '--report') {
+        const reps = yield Promise.all(getRepositoryCommits(repositories, owner));
+        let totalCommits = 0;
+        reps.map(a => {
+            totalCommits += a.length;
+        });
+
+        const prs = yield Promise.all(getRepositoryPullRequests(repositories, owner));
+        let totalPRs = 0;
+        prs.map(a => {
+            totalPRs += a.length;
+        });
+
+        const issuesForOrg = yield Promise.all(repositories.map(repo => getIssues(repo, owner)))
+
+        console.log('Number of organinzation commits: ', totalCommits);
+        console.log('Number of organinzation PRS: ', totalPRs);
+        console.log('Number of issues: ', issuesForOrg.length);
+
+        process.exit();
+    }
 
     const {confirmLabelCopy} = yield inquirer.prompt([
         {
