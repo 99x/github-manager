@@ -1,0 +1,1 @@
+This directory contains wrapper functions for Library to use CLI. Each wrapper module will be used inside main.js aka main menu for CLI
