@@ -17,7 +17,7 @@ Once installed commmand `gh-manager` will be available globally.
 $ gh-manager
 ```
 
-## Inpiration
+## Inspiration
 
 GitHub offers massive features with heavy customizations for repositories and organizations. Most of these features are available through [GitHub's public API](https://developer.github.com/v3/). When performing particular actions some of these features provided through the API aren't enough. In order to do bulk tasks, for an example if we need to add same label to an organization, there is no particular API. This is where `github-manager-cli` comes into play. This tool can be helpful in performing prominent bulk tasks through the CLI.
 
